@@ -1,0 +1,60 @@
+---
+- name: Create a VM from a template
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars_prompt:
+    - name: "vmware_password"
+      prompt: "vmware_password"
+
+  tasks:
+  - name: Clone the template
+    vmware_guest:
+      hostname: x.x.x.x
+      username: username
+      password: '{{ vmware_password }}'
+      validate_certs: False
+      name: "{{ item }}"
+      template: template
+      datacenter: datacenter
+      folder: /folder/path
+      state: poweredon
+      disk:
+      - size_gb: size
+        type: thin
+        autoselect_datastore: false
+        datastore: datastore_x
+      - size_gb: size
+        type: thin
+        autoselect_datastore: false
+        datastore: datastore_x
+      hardware:
+        memory_gb: 4
+        num_cpus: 2
+        num_cpu_cores_per_socket: 2
+      cdrom:
+        type: iso
+        iso_path: "[iso_datastore] CentOS-7-x86_64-DVD-1810.iso"
+      customization:
+        autologon: yes
+        dns_servers:
+        - 0.0.0.0
+        - 0.0.0.0
+        domain: domain
+      networks:
+      - name: VM Network
+        ip: x.x.x.x
+        netmask: 255.255.255.0
+        gateway: x.x.x.1
+        vlan: x
+        type: static
+        device_type: vmxnet3
+      wait_for_ip_address: yes
+    delegate_to: localhost
+    register: deploy
+
+  - name:
+    yum:
+      name: open-vm-tools
+      state: present
